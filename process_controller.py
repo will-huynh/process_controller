@@ -33,7 +33,8 @@ class ProcessController(object):
     def __init__(self, target_method, included_logger=True):
 
         """[NOTE: GLOBAL REFERENCE] If included_logger is True, use the included logger and log server."""
-        use_included_logger() #Reference to a global function; loggers belonging to the same class implementation cannot be pickled using multiprocessing.Process
+        if included_logger:
+            use_included_logger() #Reference to a global function; loggers belonging to the same class implementation cannot be pickled using multiprocessing.Process
 
         """[NOTE: GLOBAL REFERENCE] Reference to a single global which tracks if the included logging server has been started."""
         global log_server_pid
