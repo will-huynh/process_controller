@@ -112,7 +112,7 @@ class ProcessController(object):
         logger.info("Process {} completed, exiting.".format(worker_name))
         sys.exit(0)
 
-    #Creates and uses a process to run a job using the assigned target method. Set "use_cleaner" to turn off the process cleaner (in "process_cleaner")
+    #Creates and uses a process to run a job using the assigned target method.
     def use_process(self, args):
         self.clean_process_list()
         self.process_results = multiprocessing.Queue()
