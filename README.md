@@ -31,13 +31,13 @@ The _process_controller_ module was designed to be used by other modules. It is 
 
 ### Getting Started
 
-For the provided examples, a module with a test function will be used. The test function is a simple two-argument sum function configured to run with the optional test logger.
+For the provided examples, a module with a test function will be used. The test function is a simple two-argument division function configured to run with the optional test logger.
 > import test_function
 
 Use of the _test_function_ module is very simple:
-> test_function.test(1,2)
+> test_function.test(4,2)
 
-> __Example result:__ "Sum is 3."
+> __Example result:__ "Quotient is 2."
 
 To begin, import the module:
 > import process_controller
@@ -45,7 +45,7 @@ To begin, import the module:
 Next, create a ProcessController object with the desired method to be used. __NOTE: Methods used must be picklable (due to the behavior of _multiprocessing_ and _subprocess_).__
 > pc = process_controller.ProcessController(test_function.test)
 
-If you wish to disable the included test logger:
+To disable the included test logger:
 > pc = process_controller.ProcessController(test_function.test, included_logger=False)
 
 ### Using a Pool of Worker Processes
@@ -58,15 +58,15 @@ To begin, use _create_new_pool_ to create a pool of worker processes. An example
 It is intentionally designed that only one pool can be created at a time for each object of the __ProcessController__ class. There should not be a practical need to create multiple pools for one assigned method, seeing that more or less processes can be dynamically assigned as needed, and the use of multiple pools would create unnecessary overhead and unforeseen conflicts.
 
 Once a pool is created, assign the pool a batch of jobs with the _use_pool_ method to run the user's assigned method. In this scope, jobs are the required input (ie: arguments) for the user's assigned method:
-> pc.use_pool([[3,2],[5,6]])
+> pc.use_pool([[4,2],[12,3]])
 
->__Example result__:"[5, 11]"
+>__Example result__:"[2, 4]"
 
 The _use_pool_ method returns results in two ways. Every use of the method returns the immediate results for that batch of jobs upon completion. Objects of the __ProcessController__ class also contain a list of pool results, _pool_results_, as an attribute. Each entry in _pool_results_ contains both the results for the batch of jobs and the ID of the batch for those jobs. For the previous example where the batch was the first batch given:
 
 >print(pc.pool_results)
 
->[[[5, 11], 'Pool Batch ID: 0']]
+>[[[2, 4], 'Pool Batch ID: 0']]
 
 ### Creating Individual Worker Processes
 
