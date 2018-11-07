@@ -81,7 +81,7 @@ class ProcessController(object):
                 self.pool_job_id += 1
                 break
             else:
-                logger.info("Jobs in progress, {} jobs left.".format(remaining_progress)) #Replace with progress bar
+                logger.debug("Jobs in progress, {} jobs left.".format(remaining_progress)) #Replace with progress bar
                 time.sleep(2)
 
     #Check process list for dead processes
