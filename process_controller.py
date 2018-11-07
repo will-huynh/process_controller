@@ -52,7 +52,7 @@ class ProcessController(object):
 
         """Initialization for process functionality"""
         self.processes = deque([]) #List of created processes
-        self.process_results = [] #Multiprocessing queue used to get results from worker process
+        self.process_results = None #Multiprocessing queue used to get results from worker process
         self.join_timeout = 10 #Timeout in seconds for joining process (if process is dead or has returned results)
         self.cleaner_interval = 30 #Timeout in seconds for running the process cleaner (if active)
 
@@ -117,7 +117,8 @@ class ProcessController(object):
     #Creates and uses a process to run a job using the assigned target method.
     def use_process(self, args):
         self.clean_process_list()
-        self.process_results = multiprocessing.Queue()
+        if self.process_results is None:
+            self.process_results = multiprocessing.Queue()
         process = multiprocessing.Process(target=self.worker, args=(args,))
         logger.info("Created process; process name is {}".format(process.name))
         self.processes.append(process)
