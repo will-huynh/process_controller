@@ -77,12 +77,14 @@ class ProcessController(object):
             remaining_progress = results._number_left
             if (results.ready()):
                 logger.info("All jobs completed.")
-                self.pool_results.append([results.get(), "Pool Job ID: {}".format(self.pool_job_id)])
+                results = results.get()
+                self.pool_results.append([results, "Pool Job ID: {}".format(self.pool_job_id)])
                 self.pool_job_id += 1
                 break
             else:
                 logger.debug("Jobs in progress, {} jobs left.".format(remaining_progress)) #Replace with progress bar
                 time.sleep(2)
+        return results
 
     #Check process list for dead processes
     def clean_process_list(self):
