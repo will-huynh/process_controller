@@ -28,7 +28,7 @@ def kill_included_logger():
     global log_server_pid
     Popen("TASKKILL /F /PID {} /T".format(log_server_pid))
 
-class Process_Spawner(object):
+class ProcessController(object):
 
     def __init__(self, target_method, included_logger=True):
 
