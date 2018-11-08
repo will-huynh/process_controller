@@ -1,5 +1,5 @@
 # process_controller
-This Python module spawns new processes for other Python modules and controls those processes. Control includes job and queue handling, communication of results, and cleanup.  The Python _multiprocessing_ module is primarily used, with the _subprocess_ package used for an optional test logger.
+This Python module spawns new processes for other Python modules and controls those processes. Control includes job and queue handling, communication of results, and cleanup.  The Python _multiprocessing_ package is primarily used, with the _subprocess_ package used for an optional test logger.
 
 ## Compatibility
 The module was tested using Windows and Ubuntu (Debian/Linux). Unix compatibility is not guaranteed.
