@@ -1,11 +1,13 @@
 import multiprocessing
 import logging
 import time
-import tcp_log_socket
 import sys
 import os
+import signal
+import atexit
 from collections import deque
 from subprocess import Popen, DETACHED_PROCESS, CREATE_NEW_PROCESS_GROUP
+import tcp_log_socket
 
 """The default test logger and logging server are globally implemented.
    Future changes may change this to a class-based implementation."""
@@ -32,27 +34,31 @@ class ProcessController(object):
 
     def __init__(self, target_method, included_logger=True):
 
-        """[NOTE: GLOBAL REFERENCE] If included_logger is True, use the included logger and log server."""
-        if included_logger:
+        """[NOTE: GLOBAL REFERENCE] If included_logger is True, use the included logger and log server.
+        Reference to a single global which tracks if the included logging server has been started."""
+        self.included_logger = included_logger
+        if self.included_logger:
             use_included_logger() #Reference to a global function; loggers belonging to the same class implementation cannot be pickled using multiprocessing.Process
-
-        """[NOTE: GLOBAL REFERENCE] Reference to a single global which tracks if the included logging server has been started."""
-        global log_server_pid
-        if log_server_pid is not None:
-            self.log_server_exists = True
+            global log_server_pid
             self.log_server_pid = log_server_pid
+
+        """Exit handlers for normal and abnormal termination"""
+        atexit.register(self.quit)
+        signal.signal(signal.SIGABRT, self.exit)
+        signal.signal(signal.SIGTERM, self.exit)
 
         """Target method to run with a pool of workers or in another process"""
         self.target_method = target_method  #method to assign to a process or pool
 
         """Initialization for pool functionality"""
         self.pool = None  #Contains a persistent pool; no pool initialized by default
-        self.pool_job_id = 0
+        self.pool_batch_id = 0
         self.pool_results = [] #Results of jobs run using a pool
 
         """Initialization for process functionality"""
         self.processes = deque([]) #List of created processes
         self.process_queue = None #Multiprocessing queue used to get results from worker process
+        self.process_results = deque([])
         self.join_timeout = 10 #Timeout in seconds for joining process (if process is dead or has returned results)
         self.cleaner_interval = 30 #Timeout in seconds for running the process cleaner (if active)
 
@@ -78,11 +84,11 @@ class ProcessController(object):
             if (results.ready()):
                 logger.info("All jobs completed.")
                 results = results.get()
-                self.pool_results.append([results, "Pool Job ID: {}".format(self.pool_job_id)])
-                self.pool_job_id += 1
+                self.pool_results.append([results, "Pool Batch ID: {}".format(self.pool_batch_id)])
+                self.pool_batch_id += 1
                 break
             else:
-                logger.debug("Jobs in progress, {} jobs left.".format(remaining_progress)) #Replace with progress bar
+                logger.info("Jobs in progress, {} jobs left.".format(remaining_progress)) #Replace with progress bar
                 time.sleep(2)
         return results
 
@@ -101,7 +107,7 @@ class ProcessController(object):
     #Worker method which puts results from a target method into a queue, if any exist. Self-terminates on completion.
     def worker(self, args):
         worker_name = multiprocessing.current_process().name
-        if self.log_server_exists:
+        if self.included_logger:
             logging_socket = tcp_log_socket.local_logging_socket(worker_name)
             logger = logging_socket.logger
         else:
@@ -114,7 +120,7 @@ class ProcessController(object):
         logger.info("Process {} completed, exiting.".format(worker_name))
         sys.exit(0)
 
-    #Creates and uses a process to run a job using the assigned target method.
+    #Creates and uses a process to run a job using the assigned target method. Set "use_cleaner" to turn off the process cleaner (in "process_cleaner")
     def use_process(self, args):
         self.clean_process_list()
         if self.process_queue is None:
@@ -124,3 +130,21 @@ class ProcessController(object):
         self.processes.append(process)
         process.start()
         logger.info("Process {} started.".format(process.name))
+
+    #Waits for workers to finish pending jobs and signals them to exit. If the included test logger is used, the logger is closed and its process is killed.
+    def quit(self):
+        self.clean_process_list()
+        if self.pool is not None:
+            self.pool.close()
+        if self.included_logger:
+            kill_included_logger() #Reference to global (module-level) method which terminates the included test logger
+        self = None
+
+    #Quick cleanup called in the event of interruptions or unexpected terminations. Pending jobs and results will be lost!
+    def exit(self, signal, frame):
+        for process in self.processes:
+            process.terminate()
+        if self.pool is not None:
+            self.pool.terminate()
+        if self.included_logger:
+            kill_included_logger() #Reference to global (module_level) method
