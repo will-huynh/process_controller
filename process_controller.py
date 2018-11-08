@@ -58,7 +58,7 @@ class ProcessController(object):
         """Initialization for process functionality"""
         self.processes = deque([]) #List of created processes
         self.process_queue = None #Multiprocessing queue used to get results from worker process
-        self.process_results = deque([])
+        self.process_results = deque([]) #Deque for handling worker process results
         self.join_timeout = 10 #Timeout in seconds for joining process (if process is dead or has returned results)
         self.cleaner_interval = 30 #Timeout in seconds for running the process cleaner (if active)
 
