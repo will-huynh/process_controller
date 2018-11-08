@@ -42,7 +42,7 @@ Use of the _test_function_ module is very simple:
 To begin, import the module:
 > import process_controller
 
-Next, create a ProcessController object with the desired method to be used. __NOTE: Methods used must be picklable (due to the behavior of _multiprocessing_ and _subprocess_).__
+Next, create a ProcessController object with the desired method to be used. __NOTE: Methods used must be picklable in the object scope (due to the behavior of _multiprocessing_ and _subprocess_).__
 > pc = process_controller.ProcessController(test_function.test)
 
 To disable the included test logger:
