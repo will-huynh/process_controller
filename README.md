@@ -1,5 +1,5 @@
 # process_controller
-This Python module spawns new processes for other Python modules and controls those processes. Control includes job and queue handling, communication of results, and cleanup.  The Python _multiprocessing_ module is primarily used, with the _subprocess_ package used for an optional test logger.
+This Python module spawns new processes for other Python modules and controls those processes. Control includes job and queue handling, communication of results, and cleanup.  The Python _multiprocessing_ package is primarily used, with the _subprocess_ package used for an optional test logger.
 
 ## Compatibility
 The module was tested using Windows and Ubuntu (Debian/Linux). Unix compatibility is not guaranteed.
@@ -42,7 +42,7 @@ Use of the _test_function_ module is very simple:
 To begin, import the module:
 > import process_controller
 
-Next, create a ProcessController object with the desired method to be used. __NOTE: Methods used must be picklable (due to the behavior of _multiprocessing_ and _subprocess_).__
+Next, create a ProcessController object with the desired method to be used. __NOTE: Methods used must be picklable in the object scope (due to the behavior of _multiprocessing_ and _subprocess_).__
 > pc = process_controller.ProcessController(test_function.test)
 
 To disable the included test logger:
