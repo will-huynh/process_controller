@@ -62,6 +62,8 @@ Once a pool is created, assign the pool a batch of jobs with the _use_pool_ meth
 
 >__Example result__:"[2, 4]"
 
+#### Retrieving Results From a Pool of Worker Processes
+
 The _use_pool_ method returns results in two ways. Every use of the method returns the immediate results for that batch of jobs upon completion. Objects of the __ProcessController__ class also contain a list of pool results, _pool_results_, as an attribute. Each entry in _pool_results_ contains both the results for the batch of jobs and the ID of the batch for those jobs. For the previous example where the batch was the first batch given:
 
 >print(pc.pool_results)
@@ -74,4 +76,26 @@ The pool method will be the simpler solution in most cases. However, in situatio
 
 > pc.use_process([5,3])
 
-Each run of the _use_process_ deposits its results in the _results_queue_ multiprocessing.Queue() object.
+#### Retrieving Results From Individual Worker Processes
+
+Each run of the _use_process_ deposits its results in the _results_queue_ multiprocessing.Queue() object as the format __[<Worker_Name>, <Worker_Result>]__. To retrieve the results, the user can either use the controller's class method for automatically returning and caching results or retrieve the results directly from the worker _process_queue_.
+
+To return all pending (unretrieved) results as well as cache them in the controller's _process_results_ deque, use the built-in method, _get_process_results_. This method will return all pending results up to the method call as well as assign them to a results deque, _process_results_. An example is as follows:
+
+> pc.use_process([6,2])
+
+> pc.get_process_results()
+
+> [[3.0, 'Process-1']]
+
+A simple way to return results from the __ProcessController__._process_results_ deque for the above example is as follows (read more at the official Python docs [here](https://docs.python.org/3.6/library/collections.html?highlight=collections#collections.deque)):
+
+> pc.process_results.pop()
+
+> [[3.0, 'Process-1']]
+
+Results can also be directly retrieved from the __ProcessController__._process_queue()_ results queue. While it is recommended to use the controller's native method for retrieving results, users desiring finer manual control can retrieve results one at a time from the results queue using:
+
+> pc.process_queue.get()
+
+Using _<multiprocessing.Queue>.get()_ will retrieve worker results one at a time, starting with processes that have finished first. For control, the number of entries in the queue can be found using _<multiprocessing.Queue>.qsize()_, however this number is not accurate at every instant; for more information, read the official Python documentation [here](https://docs.python.org/3.6/library/multiprocessing.html#multiprocessing.Queue).
