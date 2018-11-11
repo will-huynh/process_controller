@@ -14,6 +14,7 @@ import tcp_log_socket
 
 logger = logging.getLogger()
 log_server_pid = None
+log_server_dir = "tcp_log_server.py"
 
 """Method to spawn the included test log server; uses globals at the current time due to pickling restrictions on class-implemented loggers."""
 def use_included_logger():
@@ -22,7 +23,7 @@ def use_included_logger():
     global log_server_pid
     logging_socket = tcp_log_socket.local_logging_socket(__name__)
     logger = logging_socket.logger
-    log_server = Popen([sys.executable, "tcp_log_server.py"], close_fds=True, shell=True, creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
+    log_server = Popen([sys.executable, log_server_dir], close_fds=True, shell=True, creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
     log_server_pid = log_server.pid
 
 """Terminate the included logger and close its window."""
@@ -130,6 +131,18 @@ class ProcessController(object):
         self.processes.append(process)
         process.start()
         logger.info("Process {} started.".format(process.name))
+
+    #Dump the results from worker processes to a sorted deque. Return the results as well.
+    def get_process_results(self):
+        results = []
+        while self.process_queue.qsize() > 0:
+            logging.info("Worker results queue is not empty: {} entries. Getting result from queue.".format(self.process_queue.qsize()))
+            result = self.process_queue.get()
+            results.append(result)
+            logging.info("""Appending result to controller "process_results" deque.""")
+            self.process_results.appendleft(result)
+        logging.info("Worker results queue is empty, returning retrieved results.")
+        return results
 
     #Waits for workers to finish pending jobs and signals them to exit. If the included test logger is used, the logger is closed and its process is killed.
     def quit(self):
