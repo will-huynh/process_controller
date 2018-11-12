@@ -37,7 +37,7 @@ For the provided examples, a module with a test function will be used. The test 
 Use of the _test_function_ module is very simple:
 > test_function.test(4,2)
 
-> __Example result:__ "Quotient is 2."
+> __Example result:__ Quotient is 2.
 
 To begin, import the module:
 > import process_controller
@@ -60,15 +60,37 @@ It is intentionally designed that only one pool can be created at a time for eac
 Once a pool is created, assign the pool a batch of jobs with the _use_pool_ method to run the user's assigned method. In this scope, jobs are the required input (ie: arguments) for the user's assigned method:
 > pc.use_pool([[4,2],[12,3]])
 
->__Example result__:"[2, 4]"
+>__Example desired output__:"[2, 4]"
 
 #### Retrieving Results From a Pool of Worker Processes
 
-The _use_pool_ method returns results in two ways. Every use of the method returns the immediate results for that batch of jobs upon completion. Objects of the __ProcessController__ class also contain a list of pool results, _pool_results_, as an attribute. Each entry in _pool_results_ contains both the results for the batch of jobs and the ID of the batch for those jobs. For the previous example where the batch was the first batch given:
+The _use_pool_ method does not immediately return results. This is designed to allow use of pools to be non-blocking. Instead, every call of the _use_pool_ method caches its pending batch of jobs in the _pool_cache_ queue. To retrieve the results of all pending jobs, the user can call the _get_pool_results_ method:
 
->print(pc.pool_results)
+> pc.get_pool_results()
 
->[[[2, 4], 'Pool Batch ID: 0']]
+> __Example Output__: [[4,2], 'Pool_Batch_ID: 0']
+
+All retrieved results will be deposited in the __ProcessController__._pool_results_ queue in order of job completion and returned to the user. To get a batch of results, use the _collections.deque.pop()_ method. For example: 
+
+> pc.pool_results.pop()
+
+> __Example Output__: [[4,2], 'Pool_Batch_ID: 0']
+
+Each entry in _pool_results_ contains both the results for the batch of jobs and the ID of the batch for those jobs. If an exception is thrown for a batch of jobs, the exception information will be logged and the information can be retrieved by the user. To retrieve the information, use the __multiprocessing__._pool_._AsyncResult_.get() method:
+
+> batch = pc.pool_results.pop()
+
+> batch[0].get()
+
+> ...__Some exception information__...
+
+If the user wishes to have finer control over the method in which they recieve results, the __multiprocessing__._pool_._AsyncResult_._get()_ can be used to retrieve individual batches of results in the order that they are deposited. Using the __ProcessController__._pool_cache_ queue:
+
+> batch = pc.pool_cache.pop()
+
+> batch[0].get()
+
+> __Example Output:__ [4,2]
 
 ### Creating Individual Worker Processes
 
