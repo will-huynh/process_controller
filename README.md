@@ -131,7 +131,7 @@ A simple way to return results from the __ProcessController__._process_results_ 
 
 > [[3.0, 'Process-1']]
 
-Results can also be directly retrieved from the __ProcessController__._process_queue()_ results queue. While it is recommended to use the controller's native method for retrieving results, users desiring finer manual control can retrieve results one at a time from the results queue using:
+Results can also be directly retrieved from the __ProcessController__._process_queue_ results queue. While it is recommended to use the controller's native method for retrieving results, users desiring finer manual control can retrieve results one at a time from the results queue using:
 
 > pc.process_queue.get()
 
