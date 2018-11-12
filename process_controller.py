@@ -93,8 +93,9 @@ class ProcessController(object):
             try:
                 result = result.get()
                 logger.info("Result successfully retrieved for Pool Batch ID: {}".format(self.pool_batch_id))
-            except:
+            except Exception as e:
                 logger.warning("Result could not be retrieved; Pool Batch ID: {}".format(self.pool_batch_id))
+                logger.error("Specific cause for failure: {}".format(e))
             result = [result, "Pool Batch ID: {}".format(self.pool_batch_id)]
             results.append(result)
             self.pool_batch_id += 1
@@ -145,12 +146,15 @@ class ProcessController(object):
     #Dump the results from worker processes to a sorted deque. Return the results as well.
     def get_process_results(self):
         results = []
-        while self.process_queue.qsize() > 0:
-            logging.info("Worker results queue is not empty: {} entries. Getting result from queue.".format(self.process_queue.qsize()))
-            result = self.process_queue.get()
-            results.append(result)
-            logging.info("""Appending result to controller "process_results" deque.""")
-            self.process_results.appendleft(result)
+        if self.process_queue is None:
+            logging.info("No worker results queue; use a process to retrieve results.")
+        else:
+            while self.process_queue.qsize() > 0:
+                logging.info("Worker results queue is not empty: {} entries. Getting result from queue.".format(self.process_queue.qsize()))
+                result = self.process_queue.get()
+                results.append(result)
+                logging.info("Storing result to controller process results queue.")
+                self.process_results.appendleft(result)
         logging.info("Worker results queue is empty, returning retrieved results.")
         return results
 
