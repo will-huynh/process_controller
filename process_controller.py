@@ -54,12 +54,13 @@ class ProcessController(object):
         """Initialization for pool functionality"""
         self.pool = None  #Contains a persistent pool; no pool initialized by default
         self.pool_batch_id = 0
-        self.pool_results = [] #Results of jobs run using a pool
+        self.pool_cache = deque([]) #Cache which holds results of pending and recently finished batches of jobs
+        self.pool_results = deque([]) #Stores all results that have been created by a controller instance by order of worker completion
 
         """Initialization for process functionality"""
         self.processes = deque([]) #List of created processes
         self.process_queue = None #Multiprocessing queue used to get results from worker process
-        self.process_results = deque([]) #Deque for handling worker process results
+        self.process_results = deque([]) #Stores all worker process results for processing
         self.join_timeout = 10 #Timeout in seconds for joining process (if process is dead or has returned results)
         self.cleaner_interval = 30 #Timeout in seconds for running the process cleaner (if active)
 
@@ -80,30 +81,39 @@ class ProcessController(object):
         else:
             results = self.pool.map_async(self.target_method, jobs)
         logger.info("Created worker processes; running processes: {}".format(self.pool._processes))
-        while True:
-            remaining_progress = results._number_left
-            if (results.ready()):
-                logger.info("All jobs completed.")
-                results = results.get()
-                self.pool_results.append([results, "Pool Batch ID: {}".format(self.pool_batch_id)])
-                self.pool_batch_id += 1
-                break
-            else:
-                logger.info("Jobs in progress, {} jobs left.".format(remaining_progress)) #Replace with progress bar
-                time.sleep(2)
+        self.pool_cache.appendleft(results)
+        logger.info("Caching pending batch of jobs in temporary storage.")
+
+    #Get unretrieved results from pool temporary cache and retrieve them. The method stores all results retrieved in a pool results queue and returns all unretrieved results to that point to the user.
+    def get_pool_results(self):
+        results = []
+        while len(self.pool_cache):
+            logger.info("Unretrieved results in pool cache: {} batches. Attempting to retrieve a batch.".format(len(self.pool_cache)))
+            result = self.pool_cache.pop()
+            try:
+                result = result.get()
+                logger.info("Result successfully retrieved for Pool Batch ID: {}".format(self.pool_batch_id))
+            except:
+                logger.warning("Result could not be retrieved; Pool Batch ID: {}".format(self.pool_batch_id))
+            result = [result, "Pool Batch ID: {}".format(self.pool_batch_id)]
+            results.append(result)
+            self.pool_batch_id += 1
+            logger.info("Appending result to pool results queue.")
+            self.pool_results.appendleft(result)
+        logger.info("All retrieved results returned; {} batches retrieved.".format(len(results)))
         return results
 
     #Check process list for dead processes
     def clean_process_list(self):
         logger.info("Checking for dead or orphaned processes.")
-        if len(self.processes):
-            for i in range(0, len(self.processes)):
-                process = self.processes.pop()
-                if process.is_alive() is not True:
-                    logger.info("{} is unresponsive; terminating process.".format(process.name))
+        while len(self.processes):
+            process = self.processes.pop()
+            if process.is_alive() is not True:
+                logger.info("{} is unresponsive; terminating process.".format(process.name))
+                if process is not None:
                     process.terminate()
-                else:
-                    self.processes.appendleft(process)
+            else:
+                self.processes.appendleft(process)
 
     #Worker method which puts results from a target method into a queue, if any exist. Self-terminates on completion.
     def worker(self, args):
