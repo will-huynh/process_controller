@@ -165,6 +165,10 @@ class ProcessController(object):
             self.pool.close()
         if self.included_logger:
             kill_included_logger() #Reference to global (module-level) method which terminates the included test logger
+
+    #Clears the controller as well as signaling all pending jobs and workers to exit
+    def clear(self):
+        self.quit()
         self = None
 
     #Quick cleanup called in the event of interruptions or unexpected terminations. Pending jobs and results will be lost!
