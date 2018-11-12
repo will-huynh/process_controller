@@ -1,16 +1,20 @@
 # process_controller
 This Python module spawns new processes for other Python modules and controls those processes. Control includes job and queue handling, communication of results, and cleanup.  The Python _multiprocessing_ package is primarily used, with the _subprocess_ package used for an optional test logger.
 
+
 ## Compatibility
 The module was tested using Windows and Ubuntu (Debian/Linux). Unix compatibility is not guaranteed.
+
 
 ## Installation
 ### Required Packages/Software
 * [Python](https://www.python.org/) 3.6 or greater
 * [pip](https://www.python.org/)
 
+
 ### Optional Packages/Software
 * [python-json-logger](https://github.com/madzak/python-json-logger) by madzak; use only if the included logging server is intended to be used. This is a third-party module which handles json-formatted logs.
+
 
 ### Setup
 1. (_Optional_) If using the included logger, install [python-json-logger](https://github.com/madzak/python-json-logger) through pip:
@@ -26,8 +30,10 @@ The module was tested using Windows and Ubuntu (Debian/Linux). Unix compatibilit
 
 >git pull
 
+
 ## Using the Module
 The _process_controller_ module was designed to be used by other modules. It is primarily invoked through other Python modules but can also be used through the Python interactive shell. The module by default uses the included test logging socket and server modules, though the module is pre-configured to make use of the user's choice of logger if the optional logger is not used.
+
 
 ### Getting Started
 
@@ -47,6 +53,7 @@ Next, create a ProcessController object with the desired method to be used. __NO
 
 To disable the included test logger:
 > pc = process_controller.ProcessController(test_function.test, included_logger=False)
+
 
 ### Using a Pool of Worker Processes
 
@@ -91,6 +98,7 @@ If the user wishes to have finer control over the method in which they recieve r
 > batch[0].get()
 
 > __Example Output:__ [4,2]
+
 
 ### Creating Individual Worker Processes
 
