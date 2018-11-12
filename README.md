@@ -76,7 +76,7 @@ All retrieved results will be deposited in the __ProcessController__._pool_resul
 
 > __Example Output__: [[4,2], 'Pool_Batch_ID: 0']
 
-Each entry in _pool_results_ contains both the results for the batch of jobs and the ID of the batch for those jobs. If an exception is thrown for a batch of jobs, the exception information will be logged and the information can be retrieved by the user. To retrieve the information, use the __multiprocessing__._pool_._AsyncResult_.get() method:
+Each entry in _pool_results_ contains both the results for the batch of jobs and the ID of the batch for those jobs. If an exception is thrown for a batch of jobs, the exception information will be logged and the information can be retrieved by the user. To retrieve the information, use the __multiprocessing__._pool_._AsyncResult_._get()_ method:
 
 > batch = pc.pool_results.pop()
 
