@@ -145,6 +145,6 @@ The _quit()_ method waits for all pending jobs and workers to finish and signals
 
 The _clear()_ method behaves similarly to the _quit()_ method, except that it also clears the controller from memory. The method was implemented to allow the user the choice to fully terminate the controller if the stored results are no longer important.
 
-In the event of unexpected termination, the _exit()_ method is used. Use of _exit()_ causes forceful module termination, __which causes a loss of all pending jobs and results__. This method can be called by the user but is mainly called by signal handlers when unexpected terminations or interrupts occur.
+In the event of unexpected termination, the _exit()_ method is used. Use of _exit()_ causes forceful module termination, shutting down all related child processes. __This will cause a loss of all pending jobs and results__. This method can be called by the user but is mainly called by signal handlers when unexpected terminations or interrupts occur.
 
 
