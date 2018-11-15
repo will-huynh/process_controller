@@ -160,11 +160,11 @@ In the event of unexpected termination, the _exit()_ method is used. Use of _exi
 
 #### __target_method__
   
-  The method used to complete jobs with worker processes.
+> The method used to complete jobs with worker processes.
 
 #### __pool__
     
-  Pool of worker processes. _None_ by default; spawned with _create_new_pool_.
+> Pool of worker processes. _None_ by default; spawned with _create_new_pool_.
 
 __pool_cache__
     
