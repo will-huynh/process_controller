@@ -151,12 +151,12 @@ In the event of unexpected termination, the _exit()_ method is used. Use of _exi
 
 ### _string_ process_controller.__log_server_dir__
     
-  The directory of the included test log server. This can be a relative or absolute directory.
+> The directory of the included test log server. This can be a relative or absolute directory.
 
 ### _class_ process_controller.__ProcessController__(target_method, included_logger=True)
     
-  The controller class which spawns and handles worker processes and communication. _target_method_ is the method that the class uses 
-  to complete jobs with associated worker processes. _included_logger_ specifies whether to use the included test logger; by default       the value is _True_.
+> The controller class which spawns and handles worker processes and communication. _target_method_ is the method that the class uses 
+    to complete jobs with associated worker processes. _included_logger_ specifies whether to use the included test logger; by default       the value is _True_.
 
 #### __target_method__
   
@@ -168,29 +168,29 @@ In the event of unexpected termination, the _exit()_ method is used. Use of _exi
 
 __pool_cache__
     
-  Temporary cache of pending pool results.
+> Temporary cache of pending pool results.
 
 __pool_results__
     
-  __collections__._deque_ which stores pool results retrieved with _get_pool_results_.
+> __collections__._deque_ which stores pool results retrieved with _get_pool_results_.
 
 __processes__
     
-  __collections__._deque_ which tracks active and inactive processes.
+> __collections__._deque_ which tracks active and inactive processes.
 
 __process_queue__
     
-  A __multiprocessing__._Queue_ which is used for individual worker process communication.
+> A __multiprocessing__._Queue_ which is used for individual worker process communication.
 
 __process_results__
     
-  __collections__._deque_ which stores individual process results.
+> __collections__._deque_ which stores individual process results.
 
 __create_new_pool__(num_processes)
     
-  Creates a new pool of worker processes. _num_processes_ is the number of processes to assign to the pool; the user should be             aware of the number of cores available to their system.
+> Creates a new pool of worker processes. _num_processes_ is the number of processes to assign to the pool; the user should be             aware of the number of cores available to their system.
 
 __use_pool__(jobs)
     
-  Uses a pool of worker processes to complete batches of jobs. For a single argument method
+> Uses a pool of worker processes to complete batches of jobs. For a single argument method
 
