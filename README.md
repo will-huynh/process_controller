@@ -186,11 +186,11 @@ __process_results__
     
 > __collections__._deque_ which stores individual process results.
 
-__create_new_pool__(num_processes)
+__create_new_pool__(_num_processes_)
     
 > Creates a new pool of worker processes. _num_processes_ is the number of processes to assign to the pool; the user should be             aware of the number of cores available to their system.
 
-__use_pool__(jobs)
+__use_pool__(_jobs_)
     
 > Uses a pool of worker processes to complete batches of jobs. For a single argument method
 
