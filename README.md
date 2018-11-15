@@ -64,7 +64,7 @@ To disable the included test logger:
 
 A simple way to complete jobs (or the task the user wishes to complete) with new processes is to assign those jobs to a pool. By design, the creation of a pool is left to the user to avoid creating unnecessary overhead.
 
-To begin, use __ProcessController__._create_new_pool_ to create a pool of worker processes. An example is as follows:
+To begin, use __ProcessController__._create_new_pool(num_processes)_ to create a pool of worker processes. An example is as follows:
 
 > pc.create_new_pool(2) #Creates a pool with 2 worker processes
 
