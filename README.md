@@ -149,11 +149,11 @@ In the event of unexpected termination, the _exit()_ method is used. Use of _exi
 
 ## Quick Reference
 
-_string_ process_controller.__log_server_dir__
+### _string_ process_controller.__log_server_dir__
     
     The directory of the included test log server. This can be a relative or absolute directory.
 
-_class_ process_controller.__ProcessController__(target_method, included_logger=True)
+### _class_ process_controller.__ProcessController__(target_method, included_logger=True)
     
     The controller class which spawns and handles worker processes and communication. _target_method_ is the method that the class uses 
     to complete jobs with associated worker processes. _included_logger_ specifies whether to use the included test logger; by default       the value is _True_.
