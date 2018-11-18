@@ -192,5 +192,11 @@ __create_new_pool__(_num_processes_)
 
 __use_pool__(_jobs_)
     
-> Uses a pool of worker processes to complete batches of jobs. For a single argument method
+> Uses a pool of worker processes to complete batches of jobs. _jobs_ specifies the total input required for the pool of worker processes to run the specified target method. For a method with arguments, provide a list of the arguments for each run of the target method; if the target method requires multiple arguments, provide a nested list with the inner list containing the arguments for one job. For a method without required arguments, use any filler argument for a single run of that method. For example:
+
+    > test_function.test(4,2); expected result: 2.
+
+    > test_function.test(6,2); expected result: 3.
+
+    > pc.use_pool([[4,2],[6,2]]); expected result: [2, 3]
 
