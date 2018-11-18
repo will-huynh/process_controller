@@ -1,6 +1,7 @@
 import multiprocessing
 import logging
 import time
+from inspect import signature
 import sys
 import os
 import signal
@@ -48,8 +49,17 @@ class ProcessController(object):
         signal.signal(signal.SIGABRT, self.exit)
         signal.signal(signal.SIGTERM, self.exit)
 
-        """Target method to run with a pool of workers or in another process"""
+        """Target method to run with a pool of workers or in another process. If the method has no arguments, apply a wrapper to allow it to be used by worker processes."""
         self.target_method = target_method  #method to assign to a process or pool
+        self.target_method_no_args = False
+        params = signature(self.target_method).parameters #Get list of required positional arguments
+        pos_params = []
+        for param in params:
+            if param.kind == param.POSITIONAL_ONLY:
+                pos_params.append(param)
+        if not len(pos_params):
+            self.target_method_no_args = True
+
 
         """Initialization for pool functionality"""
         self.pool = None  #Contains a persistent pool; no pool initialized by default
@@ -61,8 +71,6 @@ class ProcessController(object):
         self.processes = deque([]) #List of created processes
         self.process_queue = None #Multiprocessing queue used to get results from worker process
         self.process_results = deque([]) #Stores all worker process results for processing
-        self.join_timeout = 10 #Timeout in seconds for joining process (if process is dead or has returned results)
-        self.cleaner_interval = 30 #Timeout in seconds for running the process cleaner (if active)
 
     #Creates a new persistent pool with a number of processes or replaces an existing one
     def create_new_pool(self, num_processes):
@@ -73,10 +81,15 @@ class ProcessController(object):
         logger.info("Pool with {} available processes created.".format(num_processes))
 
     #Runs jobs for a given list of input parameters using the assigned target method and an existing pool
-    def use_pool(self, jobs):
+    def use_pool(self, jobs, **kwargs):
         if self.pool is None:
             logger.warning("No pool exists; create a pool to run jobs.")
-        if any(isinstance(entry, list) for entry in jobs): #if open jobs (input_data) contain nested lists, use starmap
+        if self.target_method_no_args: #if target method uses no positional arguments, use apply_async
+            results = []
+            for job in jobs:
+                result = self.pool.apply_async(self.target_method, (), **kwargs)
+                results.append(result)
+        elif any(isinstance(entry, list) for entry in jobs): #if open jobs (input_data) contain nested lists, use starmap
             results = self.pool.starmap_async(self.target_method, jobs)
         else:
             results = self.pool.map_async(self.target_method, jobs)
@@ -90,12 +103,23 @@ class ProcessController(object):
         while len(self.pool_cache):
             logger.info("Unretrieved results in pool cache: {} batches. Attempting to retrieve a batch.".format(len(self.pool_cache)))
             result = self.pool_cache.pop()
-            try:
-                result = result.get()
-                logger.info("Result successfully retrieved for Pool Batch ID: {}".format(self.pool_batch_id))
-            except Exception as e:
-                logger.warning("Result could not be retrieved; Pool Batch ID: {}".format(self.pool_batch_id))
-                logger.error("Specific cause for failure: {}".format(e))
+            if isinstance(result, list): #if any result is a list (if target_method does not use positional args)
+                batch = []
+                for entry in result:
+                    try:
+                        entry = entry.get()
+                        batch.append(entry)
+                    except Exception as e:
+                        logger.warning("Result could not be retrieved; Pool Batch ID: {}".format(self.pool_batch_id))
+                        logger.error("Specific cause for failure: {}".format(e))
+                result = batch
+            else:
+                try:
+                    result = result.get()
+                    logger.info("Result successfully retrieved for Pool Batch ID: {}".format(self.pool_batch_id))
+                except Exception as e:
+                    logger.warning("Result could not be retrieved; Pool Batch ID: {}".format(self.pool_batch_id))
+                    logger.error("Specific cause for failure: {}".format(e))
             result = [result, "Pool Batch ID: {}".format(self.pool_batch_id)]
             results.append(result)
             self.pool_batch_id += 1
@@ -107,7 +131,7 @@ class ProcessController(object):
     #Check process list for dead processes
     def clean_process_list(self):
         logger.info("Checking for dead or orphaned processes.")
-        while len(self.processes):
+        while len(self.processes) > 0:
             process = self.processes.pop()
             if process.is_alive() is not True:
                 logger.info("{} is unresponsive; terminating process.".format(process.name))
@@ -117,7 +141,7 @@ class ProcessController(object):
                 self.processes.appendleft(process)
 
     #Worker method which puts results from a target method into a queue, if any exist. Self-terminates on completion.
-    def worker(self, args):
+    def worker(self, args, **kwargs):
         worker_name = multiprocessing.current_process().name
         if self.included_logger:
             logging_socket = tcp_log_socket.local_logging_socket(worker_name)
@@ -125,23 +149,29 @@ class ProcessController(object):
         else:
             logger = logging.getLogger(worker_name)
         logger.info("Running process {}; waiting for results.".format(worker_name))
-        results = self.target_method(*args)
+        if self.target_method_no_args:
+            results = self.target_method(**kwargs)
+        else:
+            results = self.target_method(*args, **kwargs)
         results_queue = self.process_queue
         logger.info("Ran target method, storing results and name of finished process.")
         results_queue.put([results, worker_name])
         logger.info("Process {} completed, exiting.".format(worker_name))
         sys.exit(0)
 
-    #Creates and uses a process to run a job using the assigned target method. Set "use_cleaner" to turn off the process cleaner (in "process_cleaner")
-    def use_process(self, args):
-        self.clean_process_list()
-        if self.process_queue is None:
-            self.process_queue = multiprocessing.Queue()
-        process = multiprocessing.Process(target=self.worker, args=(args,))
-        logger.info("Created process; process name is {}".format(process.name))
-        self.processes.append(process)
-        process.start()
-        logger.info("Process {} started.".format(process.name))
+    #Creates and uses a process to run a job using the assigned target method.
+    def use_process(self, args, **kwargs):
+        if self.pool:
+            logger.warning("""Pool exists; close pool before using individual workers.""")
+        else:
+            self.clean_process_list()
+            if self.process_queue is None:
+                self.process_queue = multiprocessing.Queue()
+            process = multiprocessing.Process(target=self.worker, args=(args,), kwargs={**kwargs})
+            logger.info("Created process; process name is {}".format(process.name))
+            self.processes.append(process)
+            process.start()
+            logger.info("Process {} started.".format(process.name))
 
     #Dump the results from worker processes to a sorted deque. Return the results as well.
     def get_process_results(self):
