@@ -8,3 +8,6 @@ def test(num1, num2):
     quotient = num1 / num2
     logger.info("Quotient is: {}".format(quotient))
     return quotient
+
+def test2():
+    return 3
