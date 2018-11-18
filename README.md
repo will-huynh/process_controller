@@ -64,7 +64,7 @@ To disable the included test logger:
 
 A simple way to complete jobs (or the task the user wishes to complete) with new processes is to assign those jobs to a pool. By design, the creation of a pool is left to the user to avoid creating unnecessary overhead.
 
-To begin, use __ProcessController__._create_new_pool_ to create a pool of worker processes. An example is as follows:
+To begin, use __ProcessController__._create_new_pool(num_processes)_ to create a pool of worker processes. An example is as follows:
 
 > pc.create_new_pool(2) #Creates a pool with 2 worker processes
 
@@ -145,6 +145,58 @@ The _quit()_ method waits for all pending jobs and workers to finish and signals
 
 The _clear()_ method behaves similarly to the _quit()_ method, except that it also clears the controller from memory. The method was implemented to allow the user the choice to fully terminate the controller if the stored results are no longer important.
 
-In the event of unexpected termination, the _exit()_ method is used. Use of _exit()_ causes forceful module termination, __which causes a loss of all pending jobs and results__. This method can be called by the user but is mainly called by signal handlers when unexpected terminations or interrupts occur.
+In the event of unexpected termination, the _exit()_ method is used. Use of _exit()_ causes forceful module termination, shutting down all related child processes. __This will cause a loss of all pending jobs and results__. This method can be called by the user but is mainly called by signal handlers when unexpected terminations or interrupts occur.
 
+## Quick Reference
+
+### _string_ process_controller.__log_server_dir__
+    
+> The directory of the included test log server. This can be a relative or absolute directory.
+
+### _class_ process_controller.__ProcessController__(_target_method_, _included_logger=True_)
+    
+> The controller class which spawns and handles worker processes and communication. _target_method_ is the method that the class uses 
+    to complete jobs with associated worker processes. _included_logger_ specifies whether to use the included test logger; by default       the value is _True_.
+
+#### __target_method__
+  
+> The method used to complete jobs with worker processes.
+
+#### __pool__
+    
+> Pool of worker processes. _None_ by default; spawned with _create_new_pool_.
+
+__pool_cache__
+    
+> Temporary cache of pending pool results.
+
+__pool_results__
+    
+> __collections__._deque_ which stores pool results retrieved with _get_pool_results_.
+
+__processes__
+    
+> __collections__._deque_ which tracks active and inactive processes.
+
+__process_queue__
+    
+> A __multiprocessing__._Queue_ which is used for individual worker process communication.
+
+__process_results__
+    
+> __collections__._deque_ which stores individual process results.
+
+__create_new_pool__(_num_processes_)
+    
+> Creates a new pool of worker processes. _num_processes_ is the number of processes to assign to the pool; the user should be             aware of the number of cores available to their system.
+
+__use_pool__(_jobs_)
+    
+> Uses a pool of worker processes to complete batches of jobs. _jobs_ specifies the total input required for the pool of worker processes to run the specified target method. For a method with arguments, provide a list of the arguments for each run of the target method; if the target method requires multiple arguments, provide a nested list with the inner list containing the arguments for one job. For a method without required arguments, use any filler argument for a single run of that method. For example:
+
+    > test_function.test(4,2); expected result: 2.
+
+    > test_function.test(6,2); expected result: 3.
+
+    > pc.use_pool([[4,2],[6,2]]); expected result: [2, 3]
 
