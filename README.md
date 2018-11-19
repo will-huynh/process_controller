@@ -206,8 +206,14 @@ __use_pool__(_jobs_)
  
  __clean_process_list__()
  
- > Checks the _processes_ list for inactive or deadp rocesses and terminates them.
+ > Checks the _processes_ list for inactive or dead processes and terminates them.
  
  __worker__(_args, **kwargs_)
 
-> Method which is used for running the worker process. It is responsible for running the specified target method and depositing results to the main process.
+> This method is not typically called on its own, but through another method such as _use_process_ to give it multiprocessing capability. The method is used for operation of the worker process. It is responsible for running the specified target method and depositing results to the main process through a __multiprocessing__._Queue_. Keyworded arguments can also be passed.
+
+__use_process__(_args, **kwargs_)
+
+> Spawns new __individual__ worker processes and runs a check for inactive or orphaned processes. The main difference between this method and _use_pool_ is that while _use_pool_ completes a batch of given jobs by automatically assigning workflow to all processes in a __multiprocessing__._Pool_, _use_process_ leaves the task of assigning workflow to the user. 
+
+
