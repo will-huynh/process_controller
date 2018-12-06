@@ -147,7 +147,7 @@ The _clear()_ method behaves similarly to the _quit()_ method, except that it al
 
 In the event of unexpected termination, the _exit()_ method is used. Use of _exit()_ causes forceful module termination, shutting down all related child processes. __This will cause a loss of all pending jobs and results__. This method can be called by the user but is mainly called by signal handlers when unexpected terminations or interrupts occur.
 
-## Quick Reference
+## Reference
 
 ### _string_ process_controller.__log_server_dir__
     
@@ -210,10 +210,25 @@ __use_pool__(_jobs_)
  
  __worker__(_args, **kwargs_)
 
-> This method is not typically called on its own, but through another method such as _use_process_ to give it multiprocessing capability. The method is used for operation of the worker process. It is responsible for running the specified target method and depositing results to the main process through a __multiprocessing__._Queue_. Keyworded arguments can also be passed.
+> This method is not typically called on its own, but through another method such as _use_process_ to give it multiprocessing capability. The method is used for operation of the worker process. It is responsible for running the specified target method and depositing results to the main process through the _process_queue_ __multiprocessing__._Queue_. Keyworded arguments can also be passed.
 
 __use_process__(_args, **kwargs_)
 
 > Spawns new __individual__ worker processes and runs a check for inactive or orphaned processes. The main difference between this method and _use_pool_ is that while _use_pool_ completes a batch of given jobs by automatically assigning workflow to all processes in a __multiprocessing__._Pool_, _use_process_ leaves the task of assigning workflow to the user. 
 
+__get_process_results__()
+
+> Retrieves results cached in the _process_queue_ _Queue_ up to that point and returns them to the user. The results are returned in two ways: results up to the point of method call are deposited in the _process_results_ __collections__._deque_ and returned to the user.
+
+__quit__()
+
+> Waits for any workers to finish any pending jobs and signals them to exit. If a pool is created, it is signaled to close. If the included test logger is used, the logger is closed and its process is killed. This is the cleanest termination method and is closed on normal exits and intentional interrupts.
+
+__clear__()
+
+> Calls _quit_ and clears the process controller.
+
+__exit__()
+
+> Exit method used in the case of unexpected exits, interrupts, and termination. This is a quick cleanup method that will kill all worker processes regardless of any pending jobs. Any pools or individual workers will be terminated immediately. If the included test logger is used, it will be closed and its process will be killed.
 
