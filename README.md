@@ -149,9 +149,13 @@ In the event of unexpected termination, the _exit()_ method is used. Use of _exi
 
 ## Reference
 
-### _string_ process_controller.__log_server_dir__
+### _string_ process_controller.__log_server_dir__ = _tcp_log_server.py_
     
-> The directory of the included test log server. This can be a relative or absolute directory.
+> The directory of the included test logging server. This can be a relative or absolute directory.
+
+### _int_ process_controller.__log_server_pid__ = _None_
+
+> The process id of the included test logging server if it used. 
 
 ### _class_ process_controller.__ProcessController__(_target_method_, _included_logger=True_)
     
