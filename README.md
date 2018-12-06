@@ -224,7 +224,7 @@ __use_process__(_args, **kwargs_)
     
     > pc.use_process([4,2]); expected result: 2
 
-This method also accepts target methods with no required positional arguments. To use these methods, simply provide any filler argument instead of regular required arguments.
+> This method also accepts target methods with no required positional arguments. To use these methods, simply provide any filler argument instead of regular required arguments.
 
 __get_process_results__()
 
