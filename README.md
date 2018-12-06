@@ -218,7 +218,13 @@ __use_pool__(_jobs_)
 
 __use_process__(_args, **kwargs_)
 
-> Spawns new __individual__ worker processes and runs a check for inactive or orphaned processes. The main difference between this method and _use_pool_ is that while _use_pool_ completes a batch of given jobs by automatically assigning workflow to all processes in a __multiprocessing__._Pool_, _use_process_ leaves the task of assigning workflow to the user. 
+> Spawns new __individual__ worker processes and runs a check for inactive or orphaned processes. The main difference between this method and _use_pool_ is that while _use_pool_ completes a batch of given jobs by automatically assigning workflow to all processes in a __multiprocessing__._Pool_, _use_process_ leaves the task of assigning workflow to the user. An example is below:
+
+    > test_function.test(4,2); expected result: 2.
+    
+    > pc.use_process([4,2]); expected result: 2
+
+This method also accepts target methods with no required positional arguments. To use these methods, simply provide any filler argument instead of regular required arguments.
 
 __get_process_results__()
 
