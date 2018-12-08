@@ -16,6 +16,7 @@ This Python cookbook code was modified to unserialize and handle
 incoming JSON logs.
 """
 script_directory = os.path.dirname(os.path.abspath(getsourcefile(lambda:0)))
+log_name = "test_log"
 
 class LogRecordStreamHandler(socketserver.StreamRequestHandler):
 
@@ -26,12 +27,10 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
     def handleLogRecord(self, record):
         # if a name is specified, we use the named logger rather than the one
         # implied by the record.
-        if self.server.logname is not None:
-            name = self.server.logname
-        else:
-            name = record.name
+        name = record.name
+        log_file_name = self.server.log_name
         logger = logging.getLogger(name)
-        TimedRotatingFileHandler = logging.handlers.TimedRotatingFileHandler(script_directory + "/test_log", when='h', interval=1) #change hardcoded log name
+        TimedRotatingFileHandler = logging.handlers.TimedRotatingFileHandler(script_directory + "/{}".format(log_file_name), when='h', interval=1) #change hardcoded log name
         formatter = jsonlogger.JsonFormatter('%(asctime)s - %(name)s - %(pathname)s -'
                             ' %(levelname)s - %(message)s')
         TimedRotatingFileHandler.setFormatter(formatter)
@@ -57,9 +56,8 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
             while len(chunk) < slen:
                 chunk = chunk + self.connection.recv(slen + 2)
             chunk = chunk.split(bytes("  ", "utf-8"))
-            json_log = chunk[1]
-            obj = self.unserialize_json(json_log)
-            record = logging.makeLogRecord(obj)
+            json_log = self.unserialize_json(chunk[1])
+            record = logging.makeLogRecord(json_log)
             self.handleLogRecord(record)
 
 class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
@@ -69,13 +67,13 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
 
     allow_reuse_address = True
 
-    def __init__(self, host='localhost',
+    def __init__(self, log_name, host='localhost',
                  port=logging.handlers.DEFAULT_TCP_LOGGING_PORT,
                  handler=LogRecordStreamHandler):
         socketserver.ThreadingTCPServer.__init__(self, (host, port), handler)
         self.abort = 0
         self.timeout = 1
-        self.logname = None
+        self.log_name = log_name
 
     def serve_until_stopped(self):
         import select
@@ -89,9 +87,10 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
             abort = self.abort
 
 def main():
+    global log_name
     logging.basicConfig(
         format='%(relativeCreated)5d %(name)-8s %(asctime)-8s %(levelname)-8s %(message)s')
-    tcpserver = LogRecordSocketReceiver()
+    tcpserver = LogRecordSocketReceiver(log_name)
     print('About to start TCP server...')
     tcpserver.serve_until_stopped()
 
