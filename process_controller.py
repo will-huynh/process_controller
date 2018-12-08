@@ -1,7 +1,7 @@
 import multiprocessing
 import logging
 import time
-from inspect import signature
+from inspect import getfullargspec
 import sys
 import os
 import signal
@@ -15,7 +15,7 @@ import tcp_log_socket
 
 logger = logging.getLogger()
 log_server_pid = None
-log_server_dir = "tcp_log_server.py"
+log_server_dir = "tcp_log_server.py" #The name of the log file to be output; created relative to the directory of the logging server
 
 """Method to spawn the included test log server; uses globals at the current time due to pickling restrictions on class-implemented loggers."""
 def use_included_logger():
@@ -52,12 +52,8 @@ class ProcessController(object):
         """Target method to run with a pool of workers or in another process. If the method has no arguments, apply a wrapper to allow it to be used by worker processes."""
         self.target_method = target_method  #method to assign to a process or pool
         self.target_method_no_args = False
-        params = signature(self.target_method).parameters #Get list of required positional arguments
-        pos_params = []
-        for param in params:
-            if param.kind == param.POSITIONAL_ONLY:
-                pos_params.append(param)
-        if not len(pos_params):
+        self.req_args = getfullargspec(self.target_method).args #Get list of required positional arguments
+        if not len(self.req_args):
             self.target_method_no_args = True
 
 
@@ -149,8 +145,11 @@ class ProcessController(object):
         else:
             logger = logging.getLogger(worker_name)
         logger.info("Running process {}; waiting for results.".format(worker_name))
+        print("kwargs: {}".format(kwargs))
         if self.target_method_no_args:
             results = self.target_method(**kwargs)
+        elif not isinstance(args, list):
+            results = self.target_method(args, **kwargs)
         else:
             results = self.target_method(*args, **kwargs)
         results_queue = self.process_queue
@@ -167,7 +166,7 @@ class ProcessController(object):
             self.clean_process_list()
             if self.process_queue is None:
                 self.process_queue = multiprocessing.Queue()
-            process = multiprocessing.Process(target=self.worker, args=(args,), kwargs={**kwargs})
+            process = multiprocessing.Process(target=self.worker, args=(args,), kwargs=kwargs)
             logger.info("Created process; process name is {}".format(process.name))
             self.processes.append(process)
             process.start()
@@ -190,7 +189,8 @@ class ProcessController(object):
 
     #Waits for workers to finish pending jobs and signals them to exit. If the included test logger is used, the logger is closed and its process is killed.
     def quit(self):
-        self.clean_process_list()
+        if len(self.processes):
+            self.clean_process_list()
         if self.pool is not None:
             self.pool.close()
         if self.included_logger:
@@ -203,8 +203,9 @@ class ProcessController(object):
 
     #Quick cleanup called in the event of interruptions or unexpected terminations. Pending jobs and results will be lost!
     def exit(self, signal, frame):
-        for process in self.processes:
-            process.terminate()
+        if len(self.processes):
+            for process in self.processes:
+                process.terminate()
         if self.pool is not None:
             self.pool.terminate()
         if self.included_logger:
