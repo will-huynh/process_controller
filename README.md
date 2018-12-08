@@ -141,7 +141,7 @@ Using __multiprocessing__._Queue.get()_ will retrieve worker results one at a ti
 
 ### Terminating/Cleaning the Controller
 
-The ProcessController class includes three termination methods:  __ProcessController__._quit()_, __ProcessController__._clear()_, and __ProcessController__._exit()_. These handle intentional and unintentional termination, can be called by the user, and are handled automatically with exit code and signals.
+The __ProcessController__ class includes three termination methods:  __ProcessController__._quit()_, __ProcessController__._clear()_, and __ProcessController__._exit()_. These handle intentional and unintentional termination, can be called by the user, and are handled automatically with exit code and signals.
 
 The _quit()_ method waits for all pending jobs and workers to finish and signals them to exit. If the included logger is used, the process and window for the logger is closed. Regular module termination (intentional exit) is handled using the _quit()_ method.
 
