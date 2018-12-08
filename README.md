@@ -137,7 +137,7 @@ Results can also be directly retrieved from the __ProcessController__._process_q
 
     > pc.process_queue.get()
 
-Using __multiprocessing__._Queue.get()_ will retrieve worker results one at a time, starting with processes that have finished first. For control, the number of entries in the queue can be found using __multiprocessing.Queue__._qsize()_, however this number is not accurate at every instant; for more information, read the official Python documentation [here](https://docs.python.org/3.6/library/multiprocessing.html#multiprocessing.Queue).
+Using __multiprocessing__._Queue.get()_ will retrieve worker results one at a time, starting with processes that have finished first. For control, the number of entries in the queue can be found using __multiprocessing.Queue__._qsize()_. This number is not accurate at every instant however; for more information, read the official Python documentation [here](https://docs.python.org/3.6/library/multiprocessing.html#multiprocessing.Queue).
 
 ### Terminating/Cleaning the Controller
 
