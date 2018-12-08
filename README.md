@@ -58,6 +58,8 @@ Next, create a ProcessController object with the desired method to be used. __NO
 To disable the included test logger:
 
     > pc = process_controller.ProcessController(test_function.test, included_logger=False)
+    
+By default, the test logging server names its file "test_log". Currently, a global option in the logging server module is included to change this name. To change the name of the log file currently, go to the "tcp_log_server.py" file and change the "log_name" attribute for the overall module. Future changes will add more complete configuration capability from the parent module.
 
 
 ### Using a Pool of Worker Processes
