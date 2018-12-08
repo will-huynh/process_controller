@@ -24,7 +24,7 @@ class local_logging_socket(object):
 
     """
     Define a modification to the default logging socketHandler
-    "makePickle" method. Adds an hmac digest to an outgoing pickle.
+    "makePickle" method. Dumps logs to a json format.
     """
     def makePickle(self, record):
         """
@@ -45,6 +45,6 @@ class local_logging_socket(object):
         # Issue #25685: delete 'message' if present: redundant with 'msg'
         d.pop('message', None)
         s = json.dumps(d)
-        #encode pickle to base64 and create a HMAC signature for the pickle (in base64)
+        #Create complete pickle to transmit; includes the length of the pickle and the pickle content in bytes
         slen = struct.pack(">L", len(s))
         return slen + bytes("  ", "utf-8") + bytes(s, "utf-8")
